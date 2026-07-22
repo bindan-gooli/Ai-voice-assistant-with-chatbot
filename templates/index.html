@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alice - Next-Gen AI Voice & Chat Assistant</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --card-bg: rgba(22, 27, 34, 0.75);
+            --card-border: rgba(48, 54, 61, 0.8);
+            --cyan-glow: #00e5ff;
+            --purple-glow: #7c4dff;
+            --pink-accent: #ff4081;
+            --text-main: #f0f6fc;
+            --text-muted: #8b949e;
+            --user-bubble: #1b263b;
+            --alice-bubble: #231942;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 15% 20%, rgba(0, 229, 255, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 85% 80%, rgba(124, 77, 255, 0.08) 0%, transparent 40%);
+        }
+
+        /* App Container */
+        .app-container {
+            width: 95%;
+            max-width: 1000px;
+            height: 90vh;
+            max-height: 850px;
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(0, 229, 255, 0.05);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Header */
+        header {
+            padding: 20px 30px;
+            border-bottom: 1px solid var(--card-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(13, 17, 23, 0.5);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand-logo {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--cyan-glow), var(--purple-glow));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #fff;
+            box-shadow: 0 0 15px rgba(0, 229, 255, 0.4);
+        }
+
+        .brand-info h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            background: linear-gradient(90deg, var(--cyan-glow), #fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-info p {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--cyan-glow);
+            box-shadow: 0 0 10px var(--cyan-glow);
+            transition: background 0.3s;
+        }
+
+        /* Visualizer Section */
+        .visualizer-section {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        #visualizerCanvas {
+            width: 140px;
+            height: 140px;
+        }
+
+        .system-notification {
+            margin-top: 10px;
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-align: center;
+        }
+
+        /* Chat Log Window */
+        .chat-log {
+            flex: 1;
+            padding: 24px 30px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            scroll-behavior: smooth;
+        }
+
+        .chat-log::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-log::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .message-row {
+            display: flex;
+            flex-direction: column;
+            max-width: 75%;
+        }
+
+        .message-row.user {
+            align-self: flex-end;
+            align-items: flex-end;
+        }
+
+        .message-row.alice {
+            align-self: flex-start;
+            align-items: flex-start;
+        }
+
+        .sender-meta {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+            padding: 0 4px;
+        }
+
+        .message-bubble {
+            padding: 14px 18px;
+            border-radius: 16px;
+            font-size: 15px;
+            line-height: 1.5;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            word-wrap: break-word;
+        }
+
+        .message-row.user .message-bubble {
+            background: var(--user-bubble);
+            border: 1px solid rgba(0, 229, 255, 0.2);
+            border-bottom-right-radius: 4px;
+            color: var(--text-main);
+        }
+
+        .message-row.alice .message-bubble {
+            background: var(--alice-bubble);
+            border: 1px solid rgba(124, 77, 255, 0.2);
+            border-bottom-left-radius: 4px;
+            color: var(--text-main);
+        }
+
+        /* Quick Action Shortcuts */
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            padding: 10px 30px;
+            overflow-x: auto;
+        }
+
+        .quick-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--card-border);
+            color: var(--text-muted);
+            padding: 6px 14px;
+            border-radius: 16px;
+            font-size: 12px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+
+        .quick-btn:hover {
+            background: rgba(0, 229, 255, 0.1);
+            color: var(--cyan-glow);
+            border-color: rgba(0, 229, 255, 0.3);
+        }
+
+        /* Input Controls Footer */
+        footer {
+            padding: 20px 30px;
+            border-top: 1px solid var(--card-border);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            background: rgba(13, 17, 23, 0.6);
+        }
+
+        .input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        .chat-input {
+            width: 100%;
+            background: rgba(22, 27, 34, 0.9);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 14px 18px;
+            color: var(--text-main);
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .chat-input:focus {
+            border-color: var(--cyan-glow);
+            box-shadow: 0 0 15px rgba(0, 229, 255, 0.15);
+        }
+
+        .btn-send {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: var(--cyan-glow);
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: background 0.2s;
+        }
+
+        .btn-send:hover {
+            background: rgba(0, 229, 255, 0.1);
+        }
+
+        .btn-voice {
+            background: linear-gradient(135deg, var(--cyan-glow), var(--purple-glow));
+            border: none;
+            color: #fff;
+            padding: 14px 22px;
+            border-radius: 14px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(0, 229, 255, 0.25);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-voice:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 229, 255, 0.4);
+        }
+
+        .btn-voice.listening {
+            animation: pulse-glow 1.5s infinite alternate;
+            background: linear-gradient(135deg, #ff4081, #7c4dff);
+        }
+
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 10px #ff4081; }
+            100% { box-shadow: 0 0 25px #ff4081; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header>
+            <div class="brand">
+                <div class="brand-logo"><i class="fa-solid fa-robot"></i></div>
+                <div class="brand-info">
+                    <h1>ALICE AI</h1>
+                    <p>Next-Gen Voice & Chat Assistant</p>
+                </div>
+            </div>
+            <div class="status-badge">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">READY</span>
+            </div>
+        </header>
+
+        <!-- Visualizer Area -->
+        <div class="visualizer-section">
+            <canvas id="visualizerCanvas" width="140" height="140"></canvas>
+            <div class="system-notification" id="sysNotif">Press Voice Mode or Type to Chat with Alice</div>
+        </div>
+
+        <!-- Chat History Window -->
+        <div class="chat-log" id="chatLog">
+            <div class="message-row alice">
+                <div class="sender-meta">Alice • Just now</div>
+                <div class="message-bubble">Hello! I am Alice, your AI Assistant powered by Google Gemini. How can I help you today?</div>
+            </div>
+        </div>
+
+        <!-- Quick Action Shortcuts -->
+        <div class="quick-actions">
+            <button class="quick-btn" onclick="sendQuick('What time and date is it?')"><i class="fa-regular fa-clock"></i> Time & Date</button>
+            <button class="quick-btn" onclick="sendQuick('Open YouTube')"><i class="fa-brands fa-youtube"></i> YouTube</button>
+            <button class="quick-btn" onclick="sendQuick('Open GitHub')"><i class="fa-brands fa-github"></i> GitHub</button>
+            <button class="quick-btn" onclick="sendQuick('Search for latest AI news on Google')"><i class="fa-brands fa-google"></i> AI News</button>
+        </div>
+
+        <!-- Input Footer -->
+        <footer>
+            <div class="input-wrapper">
+                <input type="text" class="chat-input" id="chatInput" placeholder="Type a message or command..." onkeydown="handleKeyPress(event)">
+                <button class="btn-send" onclick="sendMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+            <button class="btn-voice" id="btnVoice" onclick="toggleVoice()"><i class="fa-solid fa-microphone"></i> Voice Mode</button>
+        </footer>
+    </div>
+
+    <!-- Application Script -->
+    <script>
+        const chatLog = document.getElementById('chatLog');
+        const chatInput = document.getElementById('chatInput');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const sysNotif = document.getElementById('sysNotif');
+        const btnVoice = document.getElementById('btnVoice');
+        const canvas = document.getElementById('visualizerCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let isListening = false;
+        let isSpeaking = false;
+        let recognition = null;
+        let chatHistory = [];
+        let animationFrameId = null;
+        let phase = 0;
+
+        // Initialize Web Speech Recognition
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+
+            recognition.onstart = () => {
+                isListening = true;
+                updateStatus('LISTENING...', '#00e5ff');
+                sysNotif.innerText = "Listening... Speak into your microphone now.";
+                btnVoice.classList.add('listening');
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                sysNotif.innerText = `Recognized: "${transcript}"`;
+                appendMessage('You (Voice)', transcript, 'user');
+                processUserQuery(transcript);
+            };
+
+            recognition.onerror = (event) => {
+                isListening = false;
+                btnVoice.classList.remove('listening');
+                updateStatus('READY', '#00e5ff');
+                sysNotif.innerText = `Speech recognition error: ${event.error}`;
+            };
+
+            recognition.onend = () => {
+                isListening = false;
+                btnVoice.classList.remove('listening');
+                if (!isSpeaking) updateStatus('READY', '#00e5ff');
+            };
+        } else {
+            sysNotif.innerText = "Web Speech API not supported in this browser. You can still type messages.";
+        }
+
+        // Animated Canvas Visualizer Orb
+        function drawVisualizer() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            let radius = 30;
+
+            phase += 0.05;
+            let pulse = Math.sin(phase) * 4;
+            if (isListening) pulse += Math.sin(phase * 3) * 12;
+            if (isSpeaking) pulse += Math.sin(phase * 4) * 16;
+
+            // Outer Glow Rings
+            for (let i = 3; i >= 1; i--) {
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius + pulse + (i * 10), 0, Math.PI * 2);
+                ctx.fillStyle = isSpeaking ? `rgba(124, 77, 255, ${0.1 * i})` : `rgba(0, 229, 255, ${0.1 * i})`;
+                ctx.fill();
+            }
+
+            // Core Orb
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius + (pulse / 2), 0, Math.PI * 2);
+            ctx.fillStyle = isSpeaking ? '#7c4dff' : '#00e5ff';
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = isSpeaking ? '#7c4dff' : '#00e5ff';
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            animationFrameId = requestAnimationFrame(drawVisualizer);
+        }
+        drawVisualizer();
+
+        function updateStatus(text, color) {
+            statusText.innerText = text;
+            statusDot.style.background = color;
+            statusDot.style.boxShadow = `0 0 10px ${color}`;
+        }
+
+        function toggleVoice() {
+            if (!recognition) {
+                alert("Speech recognition is not supported in your browser.");
+                return;
+            }
+            if (isListening) {
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') sendMessage();
+        }
+
+        function sendQuick(text) {
+            chatInput.value = text;
+            sendMessage();
+        }
+
+        function sendMessage() {
+            const text = chatInput.value.trim();
+            if (!text) return;
+            chatInput.value = '';
+            appendMessage('You', text, 'user');
+            processUserQuery(text);
+        }
+
+        function appendMessage(sender, text, type) {
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const msgRow = document.createElement('div');
+            msgRow.className = `message-row ${type}`;
+
+            msgRow.innerHTML = `
+                <div class="sender-meta">${sender} • ${time}</div>
+                <div class="message-bubble">${escapeHtml(text)}</div>
+            `;
+
+            chatLog.appendChild(msgRow);
+            chatLog.scrollTop = chatLog.scrollHeight;
+            chatHistory.push({ sender: type, text: text });
+        }
+
+        function escapeHtml(text) {
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 1.0;
+                
+                utterance.onstart = () => {
+                    isSpeaking = true;
+                    updateStatus('SPEAKING...', '#7c4dff');
+                };
+
+                utterance.onend = () => {
+                    isSpeaking = false;
+                    updateStatus('READY', '#00e5ff');
+                };
+
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        async function processUserQuery(query) {
+            updateStatus('THINKING...', '#ffc107');
+            sysNotif.innerText = "Querying Gemini AI engine...";
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: query, history: chatHistory })
+                });
+
+                const data = await response.json();
+                const reply = data.reply || "No response received.";
+
+                appendMessage('Alice', reply, 'alice');
+                sysNotif.innerText = "Response received.";
+                speakText(reply);
+
+                if (data.action === 'open_url' && data.url) {
+                    window.open(data.url, '_blank');
+                }
+
+            } catch (err) {
+                console.error(err);
+                const errMsg = "Sorry, failed to connect to the backend AI service.";
+                appendMessage('Alice', errMsg, 'alice');
+                updateStatus('READY', '#00e5ff');
+            }
+        }
+    </script>
+</body>
+</html>
